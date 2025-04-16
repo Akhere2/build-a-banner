@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-let conn = null; // global to prevent multiple connections in serverless
+let conn = null;
 
 const cartItemSchema = new mongoose.Schema({
   image: String,
@@ -11,25 +11,25 @@ const cartItemSchema = new mongoose.Schema({
   },
 });
 
-let CartItem; // model will be initialized later
+let CartItem;
 
 const connectToDatabase = async () => {
-  const startTime = Date.now();
   if (conn) return conn;
 
+  console.log("Connecting to MongoDB...");
   const uri = process.env.MONGO_URI;
   if (!uri) throw new Error("MONGO_URI is not defined");
 
-  console.log("Connecting to MongoDB...");
+  const start = Date.now();
+
   conn = await mongoose.connect(uri, {
     dbName: "bannerdb",
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
+    serverSelectionTimeoutMS: 8000, // try to connect faster/fail sooner
   });
 
-  console.log(`MongoDB connection time: ${Date.now() - startTime}ms`);
+  const duration = Date.now() - start;
+  console.log(`Connected to MongoDB in ${duration}ms`);
 
-  // Reuse the model if it already exists
   CartItem = mongoose.models.CartItem || mongoose.model("CartItem", cartItemSchema);
 
   return conn;
@@ -50,6 +50,8 @@ exports.handler = async (event) => {
     const item = new CartItem({ image, price });
     await item.save();
 
+    console.log("Item saved to MongoDB");
+
     return {
       statusCode: 200,
       body: JSON.stringify({ message: "Canvas added to cart!" }),
@@ -62,3 +64,4 @@ exports.handler = async (event) => {
     };
   }
 };
+
