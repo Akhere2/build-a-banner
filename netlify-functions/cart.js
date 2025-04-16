@@ -1,14 +1,7 @@
-// netlify-functions/cart.js
+// netlify/functions/addToCart.js
 const mongoose = require("mongoose");
-//const { Handler } = require("@netlify/functions");
-//const cors = require("cors");
 
-// MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI; // Get the MongoDB URI from environment variable
-mongoose.connect(MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+let conn = null; // global to prevent multiple connections in serverless
 
 const cartItemSchema = new mongoose.Schema({
   image: String,
@@ -19,32 +12,50 @@ const cartItemSchema = new mongoose.Schema({
   },
 });
 
-const CartItem = mongoose.model("CartItem", cartItemSchema);
+let CartItem; // model will be initialized later
 
-const handler = async (event, context) => {
-  if (event.httpMethod === "POST") {
-    try {
-      const { image, price } = JSON.parse(event.body);
-      const item = new CartItem({ image, price });
-      await item.save();
+const connectToDatabase = async () => {
+  if (conn) return conn;
 
-      return {
-        statusCode: 200,
-        body: JSON.stringify({ message: "Canvas added to cart!" }),
-      };
-    } catch (error) {
-      console.error("Error saving to MongoDB:", error);
-      return {
-        statusCode: 500,
-        body: JSON.stringify({ message: "Server error." }),
-      };
-    }
-  }
-  
-  return {
-    statusCode: 405,
-    body: JSON.stringify({ message: "Method Not Allowed" }),
-  };
+  const uri = process.env.MONGO_URI;
+  if (!uri) throw new Error("MONGO_URI is not defined");
+
+  conn = await mongoose.connect(uri, {
+    dbName: "bannerdb",
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+
+  // Reuse the model if it already exists
+  CartItem = mongoose.models.CartItem || mongoose.model("CartItem", cartItemSchema);
+
+  return conn;
 };
 
-module.exports.handler = handler;
+exports.handler = async (event) => {
+  if (event.httpMethod !== "POST") {
+    return {
+      statusCode: 405,
+      body: JSON.stringify({ message: "Method Not Allowed" }),
+    };
+  }
+
+  try {
+    await connectToDatabase();
+    const { image, price } = JSON.parse(event.body);
+
+    const item = new CartItem({ image, price });
+    await item.save();
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ message: "Canvas added to cart!" }),
+    };
+  } catch (error) {
+    console.error("Error saving to MongoDB:", error);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({ message: "Server error.", error: error.message }),
+    };
+  }
+};
