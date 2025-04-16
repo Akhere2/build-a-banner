@@ -1,4 +1,3 @@
-// netlify/functions/addToCart.js
 const mongoose = require("mongoose");
 
 let conn = null; // global to prevent multiple connections in serverless
@@ -15,18 +14,20 @@ const cartItemSchema = new mongoose.Schema({
 let CartItem; // model will be initialized later
 
 const connectToDatabase = async () => {
+  const startTime = Date.now();
   if (conn) return conn;
 
   const uri = process.env.MONGO_URI;
   if (!uri) throw new Error("MONGO_URI is not defined");
 
-  
-
+  console.log("Connecting to MongoDB...");
   conn = await mongoose.connect(uri, {
     dbName: "bannerdb",
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+
+  console.log(`MongoDB connection time: ${Date.now() - startTime}ms`);
 
   // Reuse the model if it already exists
   CartItem = mongoose.models.CartItem || mongoose.model("CartItem", cartItemSchema);
