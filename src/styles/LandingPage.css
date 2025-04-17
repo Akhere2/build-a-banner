@@ -1,0 +1,168 @@
+/* General styles */
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f5f6fa;
+  color: #333;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+/* Container styles */
+.flex {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  max-width: 1000px;
+  width: 100%;
+}
+
+/* Toolbar styles */
+.flex-wrap {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* Button styles */
+button {
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+button:hover {
+  transform: translateY(-2px);
+}
+
+button.bg-blue-600 {
+  background-color: #3b82f6;
+  color: #ffffff;
+}
+
+button.bg-blue-600:hover {
+  background-color: #2563eb;
+}
+
+button.bg-yellow-300 {
+  background-color: #facc15;
+  color: #333;
+}
+
+button.bg-yellow-300:hover {
+  background-color: #eab308;
+}
+
+button.bg-purple-300 {
+  background-color: #a78bfa;
+  color: #ffffff;
+}
+
+button.bg-purple-300:hover {
+  background-color: #8b5cf6;
+}
+
+button.bg-green-500 {
+  background-color: #22c55e;
+  color: #ffffff;
+}
+
+button.bg-green-500:hover {
+  background-color: #16a34a;
+}
+
+button.bg-indigo-500 {
+  background-color: #6366f1;
+  color: #ffffff;
+}
+
+button.bg-indigo-500:hover {
+  background-color: #4f46e5;
+}
+
+/* Input styles */
+input[type="color"] {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+}
+
+input[type="range"] {
+  appearance: none;
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="file"] {
+  font-size: 14px;
+  color: #6b7280;
+}
+
+/* Stage styles */
+.Stage {
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: #ffffff;
+  margin-top: 20px;
+}
+
+/* Label styles */
+label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Typography */
+span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+/* Hover effects */
+button:hover,
+input[type="color"]:hover,
+input[type="range"]:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

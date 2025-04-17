@@ -1,3 +1,4 @@
+import "../styles/LandingPage.css";
 import React, { useRef, useState } from "react";
 import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
 import { useImage } from "react-konva-utils";
