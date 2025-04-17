@@ -184,7 +184,7 @@ export default function LandingPage() {
         onMousemove={handleMouseMove}
         onMouseup={handleMouseUp}
         ref={stageRef}
-        className="border border-gray-400"
+        className="Stage"
       >
         <Layer>
           {uploadedImage && <KonvaImage image={uploadedImage} x={0} y={0} width={800} height={600} />}

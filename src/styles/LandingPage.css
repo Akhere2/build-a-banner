@@ -155,6 +155,15 @@ input[type="range"]:hover {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Add shadow around the canvas */
+.Stage {
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    background: #ffffff;
+    margin-top: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
+  }
+
 /* Animations */
 @keyframes fadeIn {
   from {
