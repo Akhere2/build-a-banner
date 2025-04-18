@@ -112,6 +112,10 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
+      <div className="title-container flex items-center gap-2">
+        <img src="build-a-banner-logo.png" alt="Logo" className="logo" /> {/* Add this line */}
+        <h1 className="title">Build-a-Banner</h1>
+      </div>
       <div className="flex flex-wrap gap-2 items-center">
         {["brush", "erase", "line"].map((t) => (
           <button

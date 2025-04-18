@@ -164,6 +164,30 @@ input[type="range"]:hover {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* Adds a subtle shadow */
   }
 
+ /* Title container styles */
+.title-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  /* Title styles */
+  .title {
+    font-size: 2rem; /* Adjust the title size */
+    font-weight: bold;
+    color: #333;
+    text-align: center;
+  }
+  
+  /* Logo styles */
+  .logo {
+    height: 6em; /* Make the logo height proportional to the title size */
+    width: auto; /* Maintain the aspect ratio */
+    object-fit: contain;
+  }
+
 /* Animations */
 @keyframes fadeIn {
   from {
