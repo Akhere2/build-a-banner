@@ -1,10 +1,12 @@
 import "../styles/LandingPage.css";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { Stage, Layer, Line, Image as KonvaImage } from "react-konva";
 import { useImage } from "react-konva-utils";
+import { useNavigate, useParams } from "react-router-dom"; 
 import axios from "axios";
 
 export default function LandingPage() {
+  const { sessionId } = useParams(); // Access the sessionId from the route
   const stageRef = useRef();
   const [tool, setTool] = useState("brush");
   const [history, setHistory] = useState([]);
@@ -15,8 +17,18 @@ export default function LandingPage() {
   const isDrawing = useRef(false);
   const [image, setImage] = useState(null);
   const [startPoint, setStartPoint] = useState(null);
-
   const [uploadedImage] = useImage(image);
+
+  const navigate = useNavigate(); 
+
+  // Redirect to login if not logged in or if sessionId doesn't match
+  useEffect(() => {
+    const storedSessionId = localStorage.getItem("sessionId");
+    if (!storedSessionId || storedSessionId !== sessionId) {
+      alert("Invalid session. Redirecting to login.");
+      navigate("/login"); 
+    }
+  }, [sessionId, navigate]);
 
   const handleMouseDown = (e) => {
     const pos = e.target.getStage().getPointerPosition();
@@ -34,7 +46,6 @@ export default function LandingPage() {
     const point = stage.getPointerPosition();
     let lastLine = lines[lines.length - 1];
     lastLine.points = lastLine.points.concat([point.x, point.y]);
-
     lines.splice(lines.length - 1, 1, lastLine);
     setLines(lines.concat());
   };
@@ -46,7 +57,7 @@ export default function LandingPage() {
         tool: "line",
         points: [startPoint.x, startPoint.y, pos.x, pos.y],
         stroke: color,
-        size: brushSize
+        size: brushSize,
       };
       setLines([...lines, newLine]);
       setStartPoint(null);
@@ -87,11 +98,18 @@ export default function LandingPage() {
   const handleAddToCart = async () => {
     const uri = stageRef.current.toDataURL();
     const price = 20;
+    const userId = localStorage.getItem("userId");
+
+    if (!userId) {
+      alert("User not logged in. Please log in to add to cart.");
+      return;
+    }
 
     try {
       await axios.post("/.netlify/functions/addToCart", {
         image: uri,
-        price
+        price,
+        userId,
       });
       alert("Canvas added to cart in database!");
     } catch (error) {
@@ -104,18 +122,31 @@ export default function LandingPage() {
     const cartItem = JSON.parse(localStorage.getItem("cartItem"));
     if (cartItem) {
       const win = window.open();
-      win.document.write(`<img src="${cartItem.image}" alt="Canvas" /> <p>Price: $${cartItem.price}</p>`);
+      win.document.write(
+        `<img src="${cartItem.image}" alt="Canvas" /> <p>Price: $${cartItem.price}</p>`
+      );
     } else {
       alert("Cart is empty.");
     }
   };
 
+  // Handle user logout
+  const handleLogout = () => {
+    // Clear session data from localStorage
+    localStorage.removeItem("sessionId");
+    localStorage.removeItem("userId");
+    
+    // Redirect to login page
+    navigate("/login");
+  };
+
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       <div className="title-container flex items-center gap-2">
-        <img src="build-a-banner-logo.png" alt="Logo" className="logo" /> {/* Add this line */}
+        <img src="build-a-banner-logo.png" alt="Logo" className="logo" />
         <h1 className="title">Build-a-Banner</h1>
       </div>
+
       <div className="flex flex-wrap gap-2 items-center">
         {["brush", "erase", "line"].map((t) => (
           <button
@@ -179,6 +210,14 @@ export default function LandingPage() {
         >
           View Cart
         </button>
+
+        {/* Logout Button */}
+        <button
+          onClick={handleLogout}
+          className="px-4 py-2 rounded border bg-red-500 text-white hover:bg-red-600"
+        >
+          Log Out
+        </button>
       </div>
 
       <Stage
@@ -191,7 +230,9 @@ export default function LandingPage() {
         className="Stage"
       >
         <Layer>
-          {uploadedImage && <KonvaImage image={uploadedImage} x={0} y={0} width={800} height={600} />}
+          {uploadedImage && (
+            <KonvaImage image={uploadedImage} x={0} y={0} width={800} height={600} />
+          )}
           {lines.map((line, i) => (
             <Line
               key={i}
@@ -200,7 +241,9 @@ export default function LandingPage() {
               strokeWidth={line.size || 2}
               tension={0.5}
               lineCap="round"
-              globalCompositeOperation={line.tool === "erase" ? "destination-out" : "source-over"}
+              globalCompositeOperation={
+                line.tool === "erase" ? "destination-out" : "source-over"
+              }
             />
           ))}
         </Layer>
@@ -208,3 +251,6 @@ export default function LandingPage() {
     </div>
   );
 }
+
+
+

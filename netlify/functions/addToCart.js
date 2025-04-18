@@ -2,7 +2,13 @@ const mongoose = require("mongoose");
 
 let conn = null;
 
+// Extend schema to include a userId field
 const cartItemSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId, // Reference to User model
+    required: true,
+    ref: "User",
+  },
   image: String,
   price: Number,
   createdAt: {
@@ -16,20 +22,15 @@ let CartItem;
 const connectToDatabase = async () => {
   if (conn) return conn;
 
-  console.log("Connecting to MongoDB...");
   const uri = process.env.MONGO_URI;
   if (!uri) throw new Error("MONGO_URI is not defined");
 
-  const start = Date.now();
-
   conn = await mongoose.connect(uri, {
     dbName: "bannerdb",
-    serverSelectionTimeoutMS: 8000, // try to connect faster/fail sooner
+    serverSelectionTimeoutMS: 8000,
   });
 
-  const duration = Date.now() - start;
-  console.log(`Connected to MongoDB in ${duration}ms`);
-
+  // Avoid model overwrite error
   CartItem = mongoose.models.CartItem || mongoose.model("CartItem", cartItemSchema);
 
   return conn;
@@ -45,16 +46,22 @@ exports.handler = async (event) => {
 
   try {
     await connectToDatabase();
-    const { image, price } = JSON.parse(event.body);
 
-    const item = new CartItem({ image, price });
+    const { userId, image, price } = JSON.parse(event.body);
+
+    if (!userId || !image || price === undefined) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Missing required fields." }),
+      };
+    }
+
+    const item = new CartItem({ userId, image, price });
     await item.save();
-
-    console.log("Item saved to MongoDB");
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Canvas added to cart!" }),
+      body: JSON.stringify({ message: "Canvas added to cart!", item }),
     };
   } catch (error) {
     console.error("Error saving to MongoDB:", error);

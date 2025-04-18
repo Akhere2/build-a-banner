@@ -1,8 +1,17 @@
-const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { v4: uuidv4 } = require("uuid"); // Import uuid to generate session IDs
 
 const uri = process.env.MONGO_URI;
-const client = new MongoClient(uri);
+
+// Define User schema & model
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+});
+
+// Prevent model overwrite in dev
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 exports.handler = async function (event, context) {
   if (event.httpMethod !== "POST") {
@@ -15,11 +24,10 @@ exports.handler = async function (event, context) {
   const { email, password } = JSON.parse(event.body);
 
   try {
-    await client.connect();
-    const db = client.db("build-a-banner");
-    const users = db.collection("users");
+    // Connect to MongoDB
+    await mongoose.connect(uri);
 
-    const user = await users.findOne({ email });
+    const user = await User.findOne({ email });
 
     if (!user) {
       return {
@@ -36,16 +44,26 @@ exports.handler = async function (event, context) {
       };
     }
 
+    // Generate a unique session ID using UUID
+    const sessionId = uuidv4();
+
+    // Optionally, store the session ID in a session collection in MongoDB for future validation (not shown here)
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Login successful", userId: user._id }),
+      body: JSON.stringify({
+        message: "Login successful",
+        userId: user._id,
+        sessionId: sessionId, // Include the session ID in the response
+      }),
     };
   } catch (err) {
+    console.error("Login error:", err);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: "Internal Server Error", details: err.message }),
     };
   } finally {
-    await client.close();
+    await mongoose.connection.close();
   }
 };

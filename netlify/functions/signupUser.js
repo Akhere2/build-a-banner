@@ -1,4 +1,4 @@
-const { MongoClient } = require("mongodb");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
 const uri = process.env.MONGO_URI;
@@ -9,7 +9,14 @@ if (!uri) {
   process.exit(1); // Exit the process if MongoDB URI is not set
 }
 
-let client;
+// Define a User schema using Mongoose
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+});
+
+// Check if the model is already defined to avoid overwriting it
+const User = mongoose.models.User || mongoose.model("User", userSchema);
 
 exports.handler = async function (event, context) {
   if (event.httpMethod !== "POST") {
@@ -22,24 +29,14 @@ exports.handler = async function (event, context) {
   const { email, password } = JSON.parse(event.body);
 
   try {
-    // Initialize MongoDB client if not already initialized
-    if (!client) {
-      client = new MongoClient(uri, {
-        useNewUrlParser: true,
-        useUnifiedTopology: true,
-      });
-    }
+    // Connect to the MongoDB database using Mongoose
+    await mongoose.connect(uri, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
 
-    // Ensure that the client is connected before performing any operations
-    if (!client.isConnected()) {
-      await client.connect();
-    }
-
-    const db = client.db("build-a-banner");
-    const users = db.collection("users");
-
-    // Check if user already exists
-    const existingUser = await users.findOne({ email });
+    // Check if the user already exists
+    const existingUser = await User.findOne({ email });
     if (existingUser) {
       return {
         statusCode: 409,
@@ -51,14 +48,17 @@ exports.handler = async function (event, context) {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     // Create a new user with hashed password
-    const result = await users.insertOne({
+    const newUser = new User({
       email,
-      password: hashedPassword, // Save the hashed password
+      password: hashedPassword,
     });
+
+    // Save the user to the database
+    await newUser.save();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "User created", id: result.insertedId }),
+      body: JSON.stringify({ message: "User created", id: newUser._id }),
     };
   } catch (err) {
     console.error("Error in creating user:", err);
@@ -67,9 +67,7 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({ error: "Internal Server Error", details: err.message }),
     };
   } finally {
-    // Ensure the client is closed properly after the operation
-    if (client && client.isConnected()) {
-      await client.close();
-    }
+    // Close the Mongoose connection
+    mongoose.connection.close();
   }
 };

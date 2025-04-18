@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";  // Import Axios
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false); // For loading state
   const navigate = useNavigate();
-
 
   const handleLoginRedirect = () => {
     navigate("/login");
@@ -13,25 +14,24 @@ export default function SignupPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+    setLoading(true); // Start loading
+
     try {
-      const res = await fetch("/.netlify/functions/signupUser", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const response = await axios.post("/.netlify/functions/signupUser", {
+        email,
+        password,
       });
-  
-      const data = await res.json();
-  
-      if (res.ok) {
-        alert("Signed up!");
+
+      // Handle success
+      if (response.status === 200) {
+        alert("Signed up successfully!");
         navigate("/login");
-      } else {
-        alert(data.message || "Signup failed.");
       }
-    } catch (err) {
-      console.error(err);
-      alert("Error signing up.");
+    } catch (error) {
+      console.error("Error signing up:", error);
+      alert(error.response?.data?.message || "Signup failed.");
+    } finally {
+      setLoading(false); // End loading
     }
   };
 
@@ -64,9 +64,10 @@ export default function SignupPage() {
         </label>
         <button
           type="submit"
+          disabled={loading} // Disable button while loading
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
         >
-          Sign Up
+          {loading ? "Signing Up..." : "Sign Up"}
         </button>
         <p
           onClick={handleLoginRedirect}
@@ -78,4 +79,5 @@ export default function SignupPage() {
     </div>
   );
 }
+
 
