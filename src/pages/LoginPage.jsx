@@ -1,48 +1,50 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // Import axios
+import axios from "axios";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false); // Loading state for button
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    setIsLoading(true); // Start loading when the request is initiated
+    setIsLoading(true);
 
     try {
-      // Make POST request using axios
       const res = await axios.post("/.netlify/functions/loginUser", {
         email,
         password,
       });
 
       if (res.status === 200) {
-        // Save session information in localStorage
-        const { sessionId, userId } = res.data; // Assuming the response contains sessionId and userId
+        const { sessionId, userId, email: returnedEmail } = res.data;
+
+        // Save everything to localStorage
         localStorage.setItem("sessionId", sessionId);
         localStorage.setItem("userId", userId);
+        localStorage.setItem("userEmail", returnedEmail); // ✅ Save the actual email
 
         alert("Logged in successfully!");
-        
-        // Redirect to the session page with the sessionId
-        navigate(`/session/${sessionId}`); 
+
+        navigate(`/session/${sessionId}`);
       } else {
-        alert(res.data.message || "Login failed."); // Show error message if login fails
+        alert(res.data.message || "Login failed.");
       }
     } catch (err) {
-      console.error(err);
-      alert("Error logging in.");
+      console.error("Login error:", err);
+      alert(
+        err.response?.data?.message ||
+          "Error logging in. Please check your credentials."
+      );
     } finally {
-      setIsLoading(false); // Reset loading state once request completes
+      setIsLoading(false);
     }
   };
 
   const handleSignupRedirect = () => {
-    navigate("/signup"); // Redirect to signup page
+    navigate("/signup");
   };
 
   return (
@@ -75,7 +77,7 @@ export default function LoginPage() {
         <button
           type="submit"
           className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700"
-          disabled={isLoading} // Disable the button during loading
+          disabled={isLoading}
         >
           {isLoading ? "Logging in..." : "Log In"}
         </button>

@@ -53,8 +53,9 @@ exports.handler = async function (event, context) {
       statusCode: 200,
       body: JSON.stringify({
         message: "Login successful",
-        userId: user._id,
-        sessionId: sessionId, // Include the session ID in the response
+        userId: user._id,       // Keep this if you still use userId anywhere
+        sessionId: sessionId,
+        email: user.email       // ✅ Add this
       }),
     };
   } catch (err) {

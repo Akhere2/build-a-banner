@@ -2,22 +2,19 @@ const mongoose = require("mongoose");
 
 let conn = null;
 
-// Extend schema to include a userId field
-const cartItemSchema = new mongoose.Schema({
-  userId: {
-    type: mongoose.Schema.Types.ObjectId, // Reference to User model
-    required: true,
-    ref: "User",
-  },
-  image: String,
-  price: Number,
-  createdAt: {
-    type: Date,
-    default: Date.now,
-  },
+const userSchema = new mongoose.Schema({
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  cart: [
+    {
+      image: String,
+      price: Number,
+      addedAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
-let CartItem;
+let User;
 
 const connectToDatabase = async () => {
   if (conn) return conn;
@@ -30,9 +27,7 @@ const connectToDatabase = async () => {
     serverSelectionTimeoutMS: 8000,
   });
 
-  // Avoid model overwrite error
-  CartItem = mongoose.models.CartItem || mongoose.model("CartItem", cartItemSchema);
-
+  User = mongoose.models.User || mongoose.model("User", userSchema);
   return conn;
 };
 
@@ -47,28 +42,38 @@ exports.handler = async (event) => {
   try {
     await connectToDatabase();
 
-    const { userId, image, price } = JSON.parse(event.body);
+    const { email, image, price } = JSON.parse(event.body);
 
-    if (!userId || !image || price === undefined) {
+    if (!email || !image || price === undefined) {
       return {
         statusCode: 400,
         body: JSON.stringify({ message: "Missing required fields." }),
       };
     }
 
-    const item = new CartItem({ userId, image, price });
-    await item.save();
+    const user = await User.findOne({ email });
+    if (!user) {
+      return {
+        statusCode: 404,
+        body: JSON.stringify({ message: "User not found." }),
+      };
+    }
+
+    const newItem = { image, price };
+    user.cart.push(newItem);
+    await user.save();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Canvas added to cart!", item }),
+      body: JSON.stringify({ message: "Item added to cart!", cart: user.cart }),
     };
   } catch (error) {
-    console.error("Error saving to MongoDB:", error);
+    console.error("Error updating user cart:", error);
     return {
       statusCode: 500,
-      body: JSON.stringify({ message: "Server error.", error: error.message }),
+      body: JSON.stringify({ message: "Server error", error: error.message }),
     };
   }
 };
+
 

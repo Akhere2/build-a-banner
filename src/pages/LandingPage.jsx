@@ -98,18 +98,18 @@ export default function LandingPage() {
   const handleAddToCart = async () => {
     const uri = stageRef.current.toDataURL();
     const price = 20;
-    const userId = localStorage.getItem("userId");
-
-    if (!userId) {
+    const email = localStorage.getItem("userEmail");
+  
+    if (!email) {
       alert("User not logged in. Please log in to add to cart.");
       return;
     }
-
+  
     try {
       await axios.post("/.netlify/functions/addToCart", {
+        email,
         image: uri,
         price,
-        userId,
       });
       alert("Canvas added to cart in database!");
     } catch (error) {
@@ -134,7 +134,7 @@ export default function LandingPage() {
   const handleLogout = () => {
     // Clear session data from localStorage
     localStorage.removeItem("sessionId");
-    localStorage.removeItem("userId");
+    localStorage.removeItem("userEmail"); // updated
     
     // Redirect to login page
     navigate("/login");
@@ -143,7 +143,7 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       <div className="title-container flex items-center gap-2">
-        <img src="build-a-banner-logo.png" alt="Logo" className="logo" />
+        <img src="../build-a-banner-logo.png" alt="Logo" className="logo" />
         <h1 className="title">Build-a-Banner</h1>
       </div>
 

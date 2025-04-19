@@ -13,6 +13,13 @@ if (!uri) {
 const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  cart: [
+    {
+      image: String,
+      price: Number,
+      addedAt: { type: Date, default: Date.now },
+    },
+  ],
 });
 
 // Check if the model is already defined to avoid overwriting it
