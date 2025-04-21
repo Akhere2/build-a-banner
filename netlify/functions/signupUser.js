@@ -40,6 +40,7 @@ exports.handler = async function (event, context) {
     await mongoose.connect(uri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      dbName: "bannerdb", // ✅ Always use the correct database
     });
 
     // Check if the user already exists
@@ -74,7 +75,9 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({ error: "Internal Server Error", details: err.message }),
     };
   } finally {
-    // Close the Mongoose connection
-    mongoose.connection.close();
+    // Close the Mongoose connection if it's open
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.connection.close();
+    }
   }
 };

@@ -119,15 +119,7 @@ export default function LandingPage() {
   };
 
   const handleViewCart = () => {
-    const cartItem = JSON.parse(localStorage.getItem("cartItem"));
-    if (cartItem) {
-      const win = window.open();
-      win.document.write(
-        `<img src="${cartItem.image}" alt="Canvas" /> <p>Price: $${cartItem.price}</p>`
-      );
-    } else {
-      alert("Cart is empty.");
-    }
+    navigate("/cart");
   };
 
   // Handle user logout

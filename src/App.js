@@ -3,6 +3,11 @@ import LandingPage from "./pages/LandingPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 
+import CartPage from "./pages/CartPage";
+
+
+
+
 function App() {
   return (
     <Router>
@@ -12,6 +17,7 @@ function App() {
         <Route path="/session/:sessionId" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/cart" element={<CartPage />} />
       </Routes>
     </Router>
   );

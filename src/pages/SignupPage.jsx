@@ -28,7 +28,7 @@ export default function SignupPage() {
         navigate("/login");
       }
     } catch (error) {
-      console.error("Error signing up:", error);
+      console.error("Error signing up:", error); 
       alert(error.response?.data?.message || "Signup failed.");
     } finally {
       setLoading(false); // End loading
