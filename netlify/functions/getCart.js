@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-let conn = null;
+//let conn = null;
 
 // Define schema
 const userSchema = new mongoose.Schema({
