@@ -1,35 +1,12 @@
-const mongoose = require("mongoose");
-
-let conn = null;
-
-const userSchema = new mongoose.Schema({
-  email: String,
-  password: String,
-  cart: [
-    {
-      image: String,
-      price: Number,
-      addedAt: { type: Date, default: Date.now },
-    },
-  ],
-});
-
-let User;
-
-const connectToDatabase = async () => {
-  if (conn) return conn;
-
-  const uri = process.env.MONGO_URI;
-  conn = await mongoose.connect(uri, {
-    dbName: "bannerdb",
-    serverSelectionTimeoutMS: 8000,
-  });
-
-  User = mongoose.models.User || mongoose.model("User", userSchema);
-  return conn;
-};
+const connectToDatabase = require("../utils/db");
+const User = require("../models/User");
 
 exports.handler = async (event) => {
+  console.log("📥 Remove from cart request:", {
+    method: event.httpMethod,
+    body: event.body,
+  });
+
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -41,6 +18,7 @@ exports.handler = async (event) => {
     await connectToDatabase();
 
     const { email, index } = JSON.parse(event.body);
+
     if (!email || index === undefined) {
       return {
         statusCode: 400,
@@ -56,15 +34,22 @@ exports.handler = async (event) => {
       };
     }
 
+    if (index < 0 || index >= user.cart.length) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Invalid cart index" }),
+      };
+    }
+
     user.cart.splice(index, 1);
     await user.save();
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Item removed from cart" }),
+      body: JSON.stringify({ message: "Item removed from cart", cart: user.cart }),
     };
   } catch (err) {
-    console.error("Error removing cart item:", err);
+    console.error("❌ Error removing cart item:", err);
     return {
       statusCode: 500,
       body: JSON.stringify({ message: "Server error", error: err.message }),

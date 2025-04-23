@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export default function CartPage() {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { sessionId } = useParams();
 
   const fetchCart = async () => {
     const email = localStorage.getItem("userEmail");
@@ -44,8 +45,9 @@ export default function CartPage() {
       const res = await axios.post("/.netlify/functions/createCheckoutSession", {
         email,
         cart: cartItems,
+        sessionId, // include sessionId in the request if needed in backend
       });
-      window.location.href = res.data.url; // Redirect to Stripe Checkout
+      window.location.href = res.data.url;
     } catch (err) {
       console.error("Checkout error:", err);
       alert("Failed to start checkout");
@@ -53,8 +55,16 @@ export default function CartPage() {
   };
 
   useEffect(() => {
+    const storedSessionId = localStorage.getItem("sessionId");
+    const email = localStorage.getItem("userEmail");
+
+    if (!email || storedSessionId !== sessionId) {
+      alert("Invalid session. Redirecting to login.");
+      return navigate("/login");
+    }
+
     fetchCart();
-  }, []);
+  }, [sessionId, navigate]);
 
   if (loading) return <div className="p-4 text-center">Loading cart...</div>;
 
@@ -63,7 +73,7 @@ export default function CartPage() {
       <div className="p-4 text-center">
         <p>Your cart is empty.</p>
         <button
-          onClick={() => navigate(`/session/${localStorage.getItem("sessionId")}`)}
+          onClick={() => navigate(`/session/${sessionId}`)}
           className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Back to Drawing
@@ -91,25 +101,25 @@ export default function CartPage() {
         ))}
       </div>
       {cartItems.length > 0 && (
-  <div className="mt-6 flex justify-center gap-4">
-    <button
-      onClick={handleCheckout}
-      className="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
-    >
-      Checkout
-    </button>
-    <button
-      onClick={() => navigate(`/draw/${localStorage.getItem("sessionId")}`)}
-      className="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
-    >
-      Back to Drawing
-    </button>
-  </div>
-)}
+        <div className="mt-6 flex justify-center gap-4">
+          <button
+            onClick={handleCheckout}
+            className="px-6 py-3 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Checkout
+          </button>
+          <button
+            onClick={() => navigate(`/session/${sessionId}`)}
+            className="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Back to Drawing
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 text-center">
         <button
-          onClick={() => navigate(`/draw/${localStorage.getItem("sessionId")}`)}
+          onClick={() => navigate(`/session/${sessionId}`)}
           className="px-6 py-3 bg-blue-500 text-white rounded hover:bg-blue-600"
         >
           Back to Drawing

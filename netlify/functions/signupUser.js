@@ -1,49 +1,28 @@
-const mongoose = require("mongoose");
+
 const bcrypt = require("bcryptjs");
+const connectToDatabase = require("../utils/db"); // ✅ centralized DB connection
+const User = require("../models/User"); // ✅ shared model
 
-const uri = process.env.MONGO_URI;
-
-// Check if MONGO_URI is set properly
-if (!uri) {
-  console.error("MongoDB URI is missing! Please set the MONGO_URI environment variable.");
-  process.exit(1); // Exit the process if MongoDB URI is not set
-}
-
-// Define a User schema using Mongoose
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  cart: [
-    {
-      image: String,
-      price: Number,
-      addedAt: { type: Date, default: Date.now },
-    },
-  ],
-});
-
-// Check if the model is already defined to avoid overwriting it
-const User = mongoose.models.User || mongoose.model("User", userSchema);
-
-exports.handler = async function (event, context) {
+exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
-      body: "Method Not Allowed",
+      body: JSON.stringify({ message: "Method Not Allowed" }),
     };
   }
 
-  const { email, password } = JSON.parse(event.body);
-
   try {
-    // Connect to the MongoDB database using Mongoose
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: "bannerdb", // ✅ Always use the correct database
-    });
+    await connectToDatabase();
 
-    // Check if the user already exists
+    const { email, password } = JSON.parse(event.body);
+
+    if (!email || !password) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ message: "Email and password are required." }),
+      };
+    }
+
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return {
@@ -52,16 +31,13 @@ exports.handler = async function (event, context) {
       };
     }
 
-    // Hash the password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create a new user with hashed password
     const newUser = new User({
       email,
       password: hashedPassword,
     });
 
-    // Save the user to the database
     await newUser.save();
 
     return {
@@ -69,15 +45,11 @@ exports.handler = async function (event, context) {
       body: JSON.stringify({ message: "User created", id: newUser._id }),
     };
   } catch (err) {
-    console.error("Error in creating user:", err);
+    console.error("❌ Error in signup handler:", err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: "Internal Server Error", details: err.message }),
+      body: JSON.stringify({ message: "Internal Server Error", error: err.message }),
     };
-  } finally {
-    // Close the Mongoose connection if it's open
-    if (mongoose.connection.readyState === 1) {
-      await mongoose.connection.close();
-    }
   }
 };
+

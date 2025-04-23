@@ -119,7 +119,7 @@ export default function LandingPage() {
   };
 
   const handleViewCart = () => {
-    navigate("/cart");
+    navigate("/cart/" + sessionId); // Pass sessionId to the cart page
   };
 
   // Handle user logout

@@ -17,7 +17,7 @@ function App() {
         <Route path="/session/:sessionId" element={<LandingPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/cart" element={<CartPage />} />
+        <Route path="/cart/:sessionId" element={<CartPage />} />
       </Routes>
     </Router>
   );

@@ -1,17 +1,9 @@
-const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const { v4: uuidv4 } = require("uuid");
+const connectToDatabase = require("../utils/db");
+const User = require("../models/User");
 
-const uri = process.env.MONGO_URI;
-
-const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-});
-
-const User = mongoose.models.User || mongoose.model("User", userSchema);
-
-exports.handler = async function (event, context) {
+exports.handler = async function (event) {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -19,15 +11,10 @@ exports.handler = async function (event, context) {
     };
   }
 
-  const { email, password } = JSON.parse(event.body);
-
   try {
-    // ✅ Always connect to the correct DB
-    await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      dbName: "bannerdb", // Important fix
-    });
+    await connectToDatabase();
+
+    const { email, password } = JSON.parse(event.body);
 
     const user = await User.findOne({ email });
 
@@ -63,9 +50,5 @@ exports.handler = async function (event, context) {
       statusCode: 500,
       body: JSON.stringify({ error: "Internal Server Error", details: err.message }),
     };
-  } finally {
-    if (mongoose.connection.readyState === 1) {
-      await mongoose.connection.close();
-    }
   }
 };
