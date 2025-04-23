@@ -1,4 +1,4 @@
-const stripe = require("stripe")(process.env.SECRET_STRIPE_KEY);
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const mongoose = require("mongoose");
 const PurchasedItem = require("../models/PurchasedItem"); // ✅ you already imported this
 
